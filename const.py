@@ -16,7 +16,7 @@ CONF_ENERGY_SENSOR = "energy_sensor"
 # Billing
 
 CONF_BILLING = "billing"
-CONF_START_DAY = "start_day"
+CONF_START_DATE = "start_date"
 CONF_CYCLE = "cycle"
 
 
@@ -55,10 +55,10 @@ DEVICE_TYPES = [
 
 # Defaults
 
-DEFAULT_NAME = "CFE Casa"
+DEFAULT_NAME = "CFE Principal"
 
-DEFAULT_TARIFF = "DAC"
+DEFAULT_TARIFF = "1C"
 
-DEFAULT_REGION = "norte"
+DEFAULT_REGION = "Norte"
 
 DEFAULT_CYCLE = "bimonthly"
