@@ -34,7 +34,7 @@ async def async_setup_entry(
 
     coordinator = CFEEnergyCoordinator(
         hass,
-        entry.data
+        entry.data,
         entry.entry_id
     )
 
