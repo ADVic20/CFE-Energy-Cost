@@ -1,91 +1,262 @@
-"""Config flow for CFE Energy Cost."""
-
-from __future__ import annotations
-
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.helpers import selector
 
 from .const import (
     DOMAIN,
-    CONF_MAIN_SENSOR,
+
+    CONF_NAME,
     CONF_TARIFF,
-    CONF_PERIOD_DAYS,
-    CONF_START_DATE,
+    CONF_REGION,
+
+    CONF_ENERGY_SENSOR,
+
+    CONF_START_DAY,
+    CONF_CYCLE,
+
+    CONF_IVA,
+    CONF_DAP,
+
+    CONF_DASHBOARD,
+    CONF_HISTORY,
+    CONF_EXCEL,
+    CONF_PDF,
+    CONF_NOTIFICATIONS
 )
 
-TARIFFS = [
-    "Tarifa 1",
-    "Tarifa 1A",
-    "Tarifa 1B",
-    "Tarifa 1C",
-    "Tarifa 1D",
-    "Tarifa 1E",
-    "Tarifa 1F",
-    "DAC",
-    "Personalizada",
-]
 
-
-class CFEEnergyCostConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for CFE Energy Cost."""
+class CFEEnergyCostConfigFlow(
+    config_entries.ConfigFlow,
+    domain=DOMAIN
+):
 
     VERSION = 1
 
+
     async def async_step_user(
         self,
-        user_input: dict[str, Any] | None = None,
+        user_input=None
     ):
-        """Handle the initial step."""
 
-        if user_input is not None:
+        return await self.async_step_general()
 
-            await self.async_set_unique_id("cfe_energy_cost")
 
-            self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(
-                title="CFE Energy Cost",
-                data=user_input,
-            )
+    async def async_step_general(
+        self,
+        user_input=None
+    ):
+
+
+        if user_input:
+
+            self.data = user_input
+
+            return await self.async_step_meter()
+
+
+
+        schema = vol.Schema(
+            {
+
+                vol.Required(
+                    CONF_NAME,
+                    default="CFE Casa"
+                ):
+                str,
+
+
+                vol.Required(
+                    CONF_TARIFF,
+                    default="DAC"
+                ):
+                vol.In(
+                    [
+                        "1",
+                        "1A",
+                        "1B",
+                        "DAC"
+                    ]
+                ),
+
+
+                vol.Required(
+                    CONF_REGION,
+                    default="norte"
+                ):
+                str
+
+            }
+        )
+
 
         return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_MAIN_SENSOR,
-                    ): selector.EntitySelector(
-                        selector.EntitySelectorConfig(
-                            domain="sensor",
-                            device_class="energy",
-                        )
-                    ),
-                    vol.Required(
-                        CONF_TARIFF,
-                        default="Tarifa 1",
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=TARIFFS,
-                            mode=selector.SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                    vol.Required(
-                        CONF_START_DATE,
-                    ): selector.DateSelector(),
-                    vol.Required(
-                        CONF_PERIOD_DAYS,
-                        default=60,
-                    ): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=1,
-                            max=365,
-                            mode=selector.NumberSelectorMode.BOX,
-                        )
-                    ),
-                }
-            ),
+            step_id="general",
+            data_schema=schema
+        )
+
+
+
+    async def async_step_meter(
+        self,
+        user_input=None
+    ):
+
+
+        if user_input:
+
+            self.data.update(
+                user_input
+            )
+
+            return await self.async_step_billing()
+
+
+
+        schema = vol.Schema(
+            {
+
+                vol.Required(
+                    CONF_ENERGY_SENSOR
+                ):
+                str
+
+            }
+        )
+
+
+        return self.async_show_form(
+            step_id="meter",
+            data_schema=schema
+        )
+
+
+
+    async def async_step_billing(
+        self,
+        user_input=None
+    ):
+
+
+        if user_input:
+
+            self.data.update(
+                user_input
+            )
+
+            return await self.async_step_options()
+
+
+
+        schema = vol.Schema(
+            {
+
+                vol.Required(
+                    CONF_START_DAY,
+                    default=1
+                ):
+                int,
+
+
+                vol.Required(
+                    CONF_CYCLE,
+                    default="bimonthly"
+                ):
+                vol.In(
+                    [
+                        "monthly",
+                        "bimonthly"
+                    ]
+                )
+
+            }
+        )
+
+
+        return self.async_show_form(
+            step_id="billing",
+            data_schema=schema
+        )
+
+
+
+    async def async_step_options(
+        self,
+        user_input=None
+    ):
+
+
+        if user_input:
+
+            self.data.update(
+                user_input
+            )
+
+
+            return self.async_create_entry(
+                title=self.data[CONF_NAME],
+                data=self.data
+            )
+
+
+
+        schema = vol.Schema(
+            {
+
+
+                vol.Optional(
+                    CONF_IVA,
+                    default=True
+                ):
+                bool,
+
+
+                vol.Optional(
+                    CONF_DAP,
+                    default=True
+                ):
+                bool,
+
+
+                vol.Optional(
+                    CONF_DASHBOARD,
+                    default=True
+                ):
+                bool,
+
+
+                vol.Optional(
+                    CONF_HISTORY,
+                    default=True
+                ):
+                bool,
+
+
+                vol.Optional(
+                    CONF_EXCEL,
+                    default=True
+                ):
+                bool,
+
+
+                vol.Optional(
+                    CONF_PDF,
+                    default=True
+                ):
+                bool,
+
+
+                vol.Optional(
+                    CONF_NOTIFICATIONS,
+                    default=True
+                ):
+                bool
+
+            }
+        )
+
+
+        return self.async_show_form(
+            step_id="options",
+            data_schema=schema
         )
