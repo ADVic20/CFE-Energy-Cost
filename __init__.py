@@ -12,6 +12,7 @@ from .coordinator import CFEEnergyCoordinator
 
 PLATFORMS = [
     "sensor"
+    "button"
 ]
 
 
