@@ -1,12 +1,32 @@
 from __future__ import annotations
 
 
-from homeassistant.components.button import ButtonEntity
 
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.components.button import (
+    ButtonEntity
+)
 
 
-from .const import DOMAIN
+
+from homeassistant.helpers.entity import (
+    EntityCategory
+)
+
+
+
+from .const import (
+
+    DOMAIN,
+
+    CONF_PREVIOUS_READING,
+
+    CONF_CURRENT_READING
+
+)
+
+
+
+
 
 
 
@@ -17,45 +37,75 @@ async def async_setup_entry(
 ):
 
 
-    data = hass.data[DOMAIN][
-        entry.entry_id
-    ]
-
-
     async_add_entities(
+
         [
-            CFENewPeriodButton(
-                data["coordinator"]
+
+            CFEPeriodResetButton(
+                hass,
+                entry
             )
+
         ]
+
     )
 
 
 
 
-class CFENewPeriodButton(
+
+
+
+
+
+class CFEPeriodResetButton(
     ButtonEntity
 ):
 
 
+    _attr_name = (
+        "CFE Nuevo Periodo"
+    )
+
+
+    _attr_icon = (
+        "mdi:file-refresh"
+    )
+
+
+
+    _attr_entity_category = (
+        EntityCategory.CONFIG
+    )
+
+
+
+
+
+
     def __init__(
         self,
-        coordinator
+        hass,
+        entry
     ):
 
-        self.coordinator = coordinator
 
-        self._attr_name = (
-            "CFE Nuevo Periodo"
-        )
+        self.hass = hass
+
+        self.entry = entry
+
 
         self._attr_unique_id = (
-            "cfe_new_period"
+
+            f"{DOMAIN}_new_period_"
+
+            f"{entry.entry_id}"
+
         )
 
-        self._attr_entity_category = (
-            EntityCategory.CONFIG
-        )
+
+
+
 
 
 
@@ -63,33 +113,52 @@ class CFENewPeriodButton(
         self
     ):
 
-        state = (
-            self.coordinator
-            .hass
-            .states
-            .get(
-                self.coordinator.energy_sensor
+
+        data = dict(
+            self.entry.data
+        )
+
+
+
+        current = float(
+
+            data.get(
+
+                CONF_CURRENT_READING,
+
+                0
+
             )
+
         )
 
 
-        if state is None:
 
-            return
+        data[
 
+            CONF_PREVIOUS_READING
 
-
-        meter = float(
-            state.state
-        )
+        ] = current
 
 
-        from datetime import date
 
 
-        await self.coordinator.period.async_set_start(
-            meter,
-            str(date.today())
+        data[
+
+            CONF_CURRENT_READING
+
+        ] = 0
+
+
+
+
+
+        self.hass.config_entries.async_update_entry(
+
+            self.entry,
+
+            data=data
+
         )
 
 
