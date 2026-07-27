@@ -1,0 +1,30 @@
+{
+    "name": "Tarifa 1",
+    "country": "Mexico",
+    "currency": "MXN",
+
+    "period": "bimonthly",
+
+    "blocks": [
+        {
+            "name": "Basico",
+            "limit": 150,
+            "price": 1.007
+        },
+        {
+            "name": "Intermedio",
+            "limit": 300,
+            "price": 1.167
+        },
+        {
+            "name": "Excedente",
+            "limit": -1,
+            "price": 4.004
+        }
+    ],
+
+    "charges": {
+        "iva": 0.16,
+        "dap": true
+    }
+}
