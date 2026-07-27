@@ -1,39 +1,44 @@
-"""Constants for CFE Energy Cost."""
-
-from __future__ import annotations
-
 DOMAIN = "cfe_energy_cost"
 
-NAME = "CFE Energy Cost"
 
-VERSION = "1.0.0-alpha1"
+# Config keys
 
-MANUFACTURER = "ADVic20"
+CONF_NAME = "name"
 
-DEFAULT_UPDATE_INTERVAL = 60
-
-DEFAULT_PERIOD_DAYS = 60
-
-STORAGE_VERSION = 1
-
-STORAGE_KEY = DOMAIN
-
-CONF_MAIN_SENSOR = "main_sensor"
-
-CONF_DEVICE_SENSORS = "device_sensors"
+CONF_ENERGY_SENSOR = "energy_sensor"
 
 CONF_TARIFF = "tariff"
+CONF_TARIFF_TYPE = "type"
+CONF_REGION = "region"
 
-CONF_START_DATE = "start_date"
+CONF_BILLING = "billing"
+CONF_START_DAY = "start_day"
+CONF_CYCLE = "cycle"
 
-CONF_PERIOD_DAYS = "period_days"
+CONF_CHARGES = "charges"
 
-CONF_CATEGORIES = "categories"
+CONF_IVA = "iva"
+CONF_DAP = "dap"
 
-ATTR_COST = "cost"
+CONF_FORECAST = "forecast"
+CONF_HISTORY = "history"
+CONF_DASHBOARD = "dashboard"
 
-ATTR_CONSUMPTION = "consumption"
 
-ATTR_PERIOD = "period"
+# Defaults
 
-ATTR_CATEGORY = "category"
+DEFAULT_NAME = "CFE Casa"
+
+DEFAULT_CYCLE = "bimonthly"
+
+DEFAULT_TARIFF = "DAC"
+
+
+# Sensors
+
+SENSOR_MONTHLY_KWH = "monthly_kwh"
+SENSOR_CURRENT_COST = "current_cost"
+SENSOR_ESTIMATED_BILL = "estimated_bill"
+SENSOR_DAYS_REMAINING = "days_remaining"
+SENSOR_DAILY_AVERAGE = "daily_average"
+SENSOR_TARIFF = "tariff"
