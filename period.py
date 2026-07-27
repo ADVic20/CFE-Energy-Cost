@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from datetime import datetime
 
 from homeassistant.helpers.storage import Store
 
 
+
 STORAGE_VERSION = 1
+
 STORAGE_KEY = "cfe_energy_cost_period"
+
 
 
 
@@ -19,6 +21,7 @@ class CFEPeriodStorage:
         entry_id
     ):
 
+
         self.store = Store(
             hass,
             STORAGE_VERSION,
@@ -26,7 +29,8 @@ class CFEPeriodStorage:
         )
 
 
-        self.data = None
+        self.data = {}
+
 
 
 
@@ -34,18 +38,26 @@ class CFEPeriodStorage:
         self
     ):
 
-        self.data = await self.store.async_load()
+
+        saved = await self.store.async_load()
 
 
-        if self.data is None:
+        if saved is None:
 
-            self.data = {
+            saved = {
 
                 "start_date": None,
 
-                "initial_meter": None
+                "end_date": None,
+
+                "previous_reading": None,
+
+                "current_reading": None
 
             }
+
+
+        self.data = saved
 
 
         return self.data
@@ -53,10 +65,13 @@ class CFEPeriodStorage:
 
 
 
-    async def async_set_start(
+
+    async def async_set_period(
         self,
-        meter_value: float,
-        start_date: str
+        start_date: str,
+        end_date: str,
+        previous_reading: float,
+        current_reading: float
     ):
 
 
@@ -64,7 +79,11 @@ class CFEPeriodStorage:
 
             "start_date": start_date,
 
-            "initial_meter": meter_value
+            "end_date": end_date,
+
+            "previous_reading": previous_reading,
+
+            "current_reading": current_reading
 
         }
 
@@ -76,30 +95,33 @@ class CFEPeriodStorage:
 
 
 
-    def calculate_consumption(
-        self,
-        current_meter: float
+
+    def get_consumption(
+        self
     ):
 
 
-        if not self.data:
-
-            return 0
-
-
-
-        initial = self.data.get(
-            "initial_meter"
+        previous = self.data.get(
+            "previous_reading"
         )
 
 
-        if initial is None:
+        current = self.data.get(
+            "current_reading"
+        )
+
+
+
+        if (
+            previous is None
+            or current is None
+        ):
 
             return 0
 
 
 
         return round(
-            current_meter - initial,
+            current - previous,
             2
         )
