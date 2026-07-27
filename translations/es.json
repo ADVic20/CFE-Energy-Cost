@@ -1,46 +1,30 @@
 {
-  "config": {
-    "step": {
-      "general": {
-        "title": "Configuración general",
-        "description": "Configura la información básica de CFE Energy Cost",
-        "data": {
-          "name": "Nombre de la instalación",
-          "tariff": "Tarifa CFE",
-          "region": "Región"
+    "config": {
+        "step": {
+            "user": {
+                "title": "CFE Energy Cost",
+                "description": "Configura el cálculo de tu recibo CFE",
+                "data": {
+                    "name": "Nombre de la instalación",
+                    "energy_sensor": "Sensor del medidor eléctrico",
+                    "tariff": "Tarifa CFE",
+                    "region": "Región CFE",
+                    "cycle": "Periodo de facturación",
+                    "start_date": "Fecha de corte",
+                    "period_start": "Fecha inicio del periodo",
+                    "period_end": "Fecha fin del periodo",
+                    "previous_reading": "Lectura anterior del medidor",
+                    "current_reading": "Lectura actual del medidor",
+                    "iva": "Incluir IVA",
+                    "dap": "Incluir DAP",
+                    "dashboard": "Crear dashboard",
+                    "history": "Guardar historial",
+                    "reports": "Generar reportes",
+                    "excel": "Exportación Excel",
+                    "pdf": "Exportación PDF",
+                    "notifications": "Activar notificaciones"
+                }
+            }
         }
-      },
-
-      "meter": {
-        "title": "Medidor de energía",
-        "description": "Selecciona el sensor principal de consumo eléctrico",
-        "data": {
-          "energy_sensor": "Sensor de energía"
-        }
-      },
-
-      "billing": {
-        "title": "Periodo de facturación",
-        "description": "Configura el periodo de lectura de CFE",
-        "data": {
-          "start_date": "Fecha de inicio del periodo",
-          "cycle": "Tipo de periodo"
-        }
-      },
-
-      "options": {
-        "title": "Opciones adicionales",
-        "description": "Configura funciones adicionales",
-        "data": {
-          "iva": "Calcular IVA",
-          "dap": "Calcular DAP",
-          "dashboard": "Crear dashboard",
-          "history": "Guardar historial",
-          "excel": "Generar Excel",
-          "pdf": "Generar PDF",
-          "notifications": "Notificaciones"
-        }
-      }
     }
-  }
 }
