@@ -1,0 +1,30 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "CFE Energy Cost",
+                "description": "Configura tu medidor y datos del recibo CFE",
+                "data": {
+                    "name": "Nombre",
+                    "energy_sensor": "Sensor de energía",
+                    "tariff": "Tarifa",
+                    "region": "Región",
+                    "cycle": "Ciclo de facturación",
+                    "start_date": "Fecha de corte",
+                    "period_start": "Inicio del periodo",
+                    "period_end": "Fin del periodo",
+                    "previous_reading": "Lectura anterior",
+                    "current_reading": "Lectura actual",
+                    "iva": "Aplicar IVA",
+                    "dap": "Aplicar DAP",
+                    "dashboard": "Dashboard",
+                    "history": "Historial",
+                    "reports": "Reportes",
+                    "excel": "Exportar Excel",
+                    "pdf": "Exportar PDF",
+                    "notifications": "Notificaciones"
+                }
+            }
+        }
+    }
+}
