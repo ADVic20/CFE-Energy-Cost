@@ -51,9 +51,9 @@ class CFEEnergyCoordinator(
 
 
         self.energy_sensor = (
-            config[
+            config.get(
                 CONF_ENERGY_SENSOR
-            ]
+            )
         )
 
 
@@ -93,6 +93,11 @@ class CFEEnergyCoordinator(
 
         except Exception as error:
 
+            _LOGGER.error(
+                "CFE calculation error: %s",
+                error
+            )
+
             raise UpdateFailed(
                 f"CFE Energy Cost error: {error}"
             )
@@ -127,7 +132,7 @@ class CFEEnergyCoordinator(
         except ValueError:
 
             raise Exception(
-                "Invalid energy value"
+                "Invalid energy sensor value"
             )
 
 
@@ -146,17 +151,18 @@ class CFEEnergyCoordinator(
 
 
         #
-        # Tarifa seleccionada
+        # Tarifa
         #
 
         tariff = (
-            self.config
-            .get(
+            self.config.get(
                 CONF_TARIFF,
                 "1C"
             )
-            .lower()
         )
+
+
+        tariff = tariff.lower()
 
 
         if not tariff.startswith(
@@ -179,8 +185,7 @@ class CFEEnergyCoordinator(
 
 
         region = (
-            self.config
-            .get(
+            self.config.get(
                 CONF_REGION,
                 "norte"
             )
@@ -194,14 +199,26 @@ class CFEEnergyCoordinator(
             region,
             tariff
         )
-        _LOGGER.error(
-             "DEBUG TARIFA: %s",
-             tariff_data
+
+
+
+        if tariff_data is None:
+
+            raise Exception(
+                "Tariff data is empty"
+            )
+
+
+
+        _LOGGER.debug(
+            "Tariff loaded: %s",
+            tariff_data
         )
 
 
+
         #
-        # Cálculo CFE
+        # Cálculo
         #
 
         result = calculate_cfe_cost(
@@ -213,70 +230,93 @@ class CFEEnergyCoordinator(
 
         return {
 
-            # Medidor acumulado real
+            #
+            # Medidor acumulado
+            #
 
             "meter": meter_value,
 
 
-            # Consumo del periodo
+            #
+            # Consumo periodo
+            #
 
             "energy": consumption,
 
 
-            # Datos del periodo
+            #
+            # Periodo
+            #
 
             "initial_meter":
-            self.period.data.get(
-                "initial_meter"
+            (
+                self.period.data.get(
+                    "initial_meter"
+                )
+                if self.period.data
+                else None
             ),
 
 
             "start_date":
-            self.period.data.get(
-                "start_date"
+            (
+                self.period.data.get(
+                    "start_date"
+                )
+                if self.period.data
+                else None
             ),
 
 
 
+            #
             # Tarifa
+            #
 
             "tariff":
-            tariff_data[
-                "name"
-            ],
+            tariff_data.get(
+                "name",
+                tariff
+            ),
 
 
 
+            #
             # Costos
+            #
 
             "energy_cost":
-            result[
-                "energy_cost"
-            ],
+            result.get(
+                "energy_cost",
+                0
+            ),
 
 
             "iva":
-            result[
-                "iva"
-            ],
+            result.get(
+                "iva",
+                0
+            ),
 
 
             "dap":
-            result[
-                "dap"
-            ],
+            result.get(
+                "dap",
+                0
+            ),
 
 
             "total":
-            result[
-                "total"
-            ],
-
+            result.get(
+                "total",
+                0
+            ),
 
 
             "blocks":
-            result[
-                "blocks"
-            ]
+            result.get(
+                "blocks",
+                []
+            )
 
         }
