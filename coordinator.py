@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 
 from datetime import timedelta
-
+from .period import CFEPeriodStorage
 
 from homeassistant.core import HomeAssistant
 
