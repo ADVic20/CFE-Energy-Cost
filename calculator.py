@@ -1,33 +1,34 @@
 from __future__ import annotations
 
 
+
 def calculate_cfe_cost(
     energy_kwh: float,
     tariff_data: dict,
     dap_amount: float = 0.0
 ) -> dict:
     """
-    Calculate CFE energy cost.
+    Calcula el costo estimado de energía CFE.
 
-    Args:
-        energy_kwh:
-            Total energy consumed in kWh.
+    energy_kwh:
+        Consumo del periodo en kWh
 
-        tariff_data:
-            Loaded tariff JSON.
+    tariff_data:
+        Archivo JSON de tarifa
 
-        dap_amount:
-            Fixed DAP amount.
-
-    Returns:
-        Dictionary with cost breakdown.
+    dap_amount:
+        Cargo DAP fijo
     """
 
-    remaining_energy = energy_kwh
+
+    remaining = energy_kwh
+
 
     energy_cost = 0.0
 
+
     blocks_used = []
+
 
 
     for block in tariff_data.get(
@@ -35,111 +36,209 @@ def calculate_cfe_cost(
         []
     ):
 
-        limit = block["limit"]
 
-        price = block["price"]
+        if remaining <= 0:
 
-
-        if remaining_energy <= 0:
             break
 
 
-        # Unlimited block
+
+        limit = block.get(
+            "limit",
+            -1
+        )
+
+
+        price = block.get(
+            "price",
+            0
+        )
+
+
+
         if limit == -1:
 
-            consumed = remaining_energy
+            consumed = remaining
 
 
         else:
 
             consumed = min(
-                remaining_energy,
+                remaining,
                 limit
             )
 
 
-        block_cost = (
-            consumed *
-            price
+
+        cost = round(
+            consumed * price,
+            2
         )
 
 
-        energy_cost += block_cost
+
+        energy_cost += cost
+
 
 
         blocks_used.append(
+
             {
-                "name": block["name"],
-                "energy": consumed,
-                "price": price,
-                "cost": block_cost
+
+                "name":
+                    block.get(
+                        "name",
+                        ""
+                    ),
+
+                "energy":
+                    round(
+                        consumed,
+                        2
+                    ),
+
+                "price":
+                    price,
+
+                "cost":
+                    cost
+
             }
+
         )
 
 
-        remaining_energy -= consumed
+
+        remaining -= consumed
 
 
 
+
+
+
+    #
     # IVA
+    #
 
-    iva_rate = (
-        tariff_data
-        .get("charges", {})
-        .get("iva", 0)
-    )
+    iva = 0
 
 
-    iva = (
-        energy_cost *
-        iva_rate
-    )
+    if tariff_data.get(
+        "charges",
+        {}
+    ).get(
+        "iva",
+        False
+    ):
 
 
+        iva_rate = tariff_data.get(
+            "charges",
+            {}
+        ).get(
+            "iva_rate",
+            0.16
+        )
+
+
+        iva = energy_cost * iva_rate
+
+
+
+
+
+
+
+    #
     # DAP
+    #
 
     dap = 0
 
-    if (
-        tariff_data
-        .get("charges", {})
-        .get("dap", False)
+
+
+    if tariff_data.get(
+        "charges",
+        {}
+    ).get(
+        "dap",
+        False
     ):
+
 
         dap = dap_amount
 
 
 
+
+
+
+
     total = (
+
         energy_cost +
+
         iva +
+
         dap
+
     )
+
+
+
+
 
 
     return {
 
-        "energy_kwh": energy_kwh,
 
-        "energy_cost": round(
-            energy_cost,
-            2
-        ),
+        "energy_kwh":
 
-        "iva": round(
-            iva,
-            2
-        ),
+            round(
+                energy_kwh,
+                2
+            ),
 
-        "dap": round(
-            dap,
-            2
-        ),
 
-        "total": round(
-            total,
-            2
-        ),
 
-        "blocks": blocks_used
+        "energy_cost":
+
+            round(
+                energy_cost,
+                2
+            ),
+
+
+
+        "iva":
+
+            round(
+                iva,
+                2
+            ),
+
+
+
+        "dap":
+
+            round(
+                dap,
+                2
+            ),
+
+
+
+        "total":
+
+            round(
+                total,
+                2
+            ),
+
+
+
+        "blocks":
+
+            blocks_used
+
     }
