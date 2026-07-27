@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 
-from datetime import datetime
-
-
 from homeassistant.components.sensor import (
-    SensorEntity
+    SensorEntity,
+    SensorDeviceClass,
+    SensorStateClass,
 )
 
 
 from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity
+    CoordinatorEntity,
 )
 
 
@@ -29,18 +28,22 @@ async def async_setup_entry(
 
     coordinator = hass.data[DOMAIN][
         entry.entry_id
-    ]["coordinator"]
+    ][
+        "coordinator"
+    ]
 
 
 
-    sensors = [
+    entities = [
+
 
         CFESensor(
             coordinator,
-            "consumo",
-            "CFE Consumo Periodo",
+            "consumption",
+            "CFE Consumo",
             "kWh"
         ),
+
 
 
         CFESensor(
@@ -51,12 +54,14 @@ async def async_setup_entry(
         ),
 
 
+
         CFESensor(
             coordinator,
             "iva",
             "CFE IVA",
             "MXN"
         ),
+
 
 
         CFESensor(
@@ -67,6 +72,7 @@ async def async_setup_entry(
         ),
 
 
+
         CFESensor(
             coordinator,
             "total",
@@ -74,14 +80,6 @@ async def async_setup_entry(
             "MXN"
         ),
 
-
-
-        CFESensor(
-            coordinator,
-            "tariff",
-            "CFE Tarifa",
-            None
-        ),
 
 
 
@@ -103,6 +101,34 @@ async def async_setup_entry(
 
 
 
+
+        CFESensor(
+            coordinator,
+            "days",
+            "CFE Días Periodo",
+            "días"
+        ),
+
+
+
+        CFESensor(
+            coordinator,
+            "tariff",
+            "CFE Tarifa",
+            None
+        ),
+
+
+
+        CFESensor(
+            coordinator,
+            "region",
+            "CFE Región",
+            None
+        ),
+
+
+
         CFESensor(
             coordinator,
             "period_start",
@@ -120,13 +146,23 @@ async def async_setup_entry(
         ),
 
 
+
+        CFESensor(
+            coordinator,
+            "cut_date",
+            "CFE Fecha Corte",
+            None
+        ),
+
     ]
 
 
 
     async_add_entities(
-        sensors
+        entities
     )
+
+
 
 
 
@@ -159,12 +195,15 @@ class CFESensor(
         self._attr_name = name
 
 
-        self._attr_native_unit_of_measurement = unit
-
-
         self._attr_unique_id = (
             f"{DOMAIN}_{key}"
         )
+
+
+
+        if unit:
+
+            self._attr_native_unit_of_measurement = unit
 
 
 
@@ -189,42 +228,53 @@ class CFESensor(
 
 
 
+
     @property
-    def extra_state_attributes(
+    def device_class(
         self
     ):
 
 
-        if not self.coordinator.data:
+        if self.key in (
+            "consumption",
+            "previous_reading",
+            "current_reading"
+        ):
 
-            return {}
-
-
-
-        return {
-
-
-            "period_start":
-            self.coordinator.data.get(
-                "period_start"
-            ),
+            return SensorDeviceClass.ENERGY
 
 
-            "period_end":
-            self.coordinator.data.get(
-                "period_end"
-            ),
+        if self.key in (
+            "energy_cost",
+            "iva",
+            "dap",
+            "total"
+        ):
+
+            return SensorDeviceClass.MONETARY
 
 
-            "previous_reading":
-            self.coordinator.data.get(
-                "previous_reading"
-            ),
+
+        return None
 
 
-            "current_reading":
-            self.coordinator.data.get(
-                "current_reading"
-            )
 
-        }
+
+
+
+    @property
+    def state_class(
+        self
+    ):
+
+
+        if self.key in (
+            "consumption",
+            "previous_reading",
+            "current_reading"
+        ):
+
+            return SensorStateClass.TOTAL_INCREASING
+
+
+        return None
