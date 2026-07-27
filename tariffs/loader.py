@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+
 import json
 
 from pathlib import Path
 
 
-TARIFF_PATH = Path(__file__).parent
+
+BASE_PATH = Path(__file__).parent
+
+
+
 
 
 
@@ -15,30 +20,50 @@ def load_tariff(
     tariff: str
 ):
 
-    file = (
-        TARIFF_PATH
-        / country.lower()
-        / region.lower()
-        / f"{tariff.lower()}.json"
+
+    filename = (
+        f"{tariff.lower()}.json"
     )
 
 
-    if not file.exists():
+    path = (
 
-        raise FileNotFoundError(
-            f"Tariff not found: {file}"
-        )
+        BASE_PATH /
 
+        country.lower() /
 
-    with open(
-        file,
-        "r",
-        encoding="utf-8"
-    ) as tariff_file:
+        region.lower() /
 
-        data = json.load(
-            tariff_file
-        )
+        filename
+
+    )
 
 
-    return data
+
+    if not path.exists():
+
+        return None
+
+
+
+
+    try:
+
+
+        with open(
+            path,
+            "r",
+            encoding="utf-8"
+        ) as file:
+
+
+            return json.load(
+                file
+            )
+
+
+
+    except Exception:
+
+
+        return None
