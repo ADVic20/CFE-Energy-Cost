@@ -20,10 +20,21 @@ CONF_START_DATE = "start_date"
 CONF_CYCLE = "cycle"
 
 
+# Datos del recibo CFE
+
+CONF_PERIOD_START = "period_start"
+CONF_PERIOD_END = "period_end"
+
+CONF_PREVIOUS_READING = "previous_reading"
+CONF_CURRENT_READING = "current_reading"
+
+
+
 # Charges
 
 CONF_IVA = "iva"
 CONF_DAP = "dap"
+
 
 
 # Features
@@ -37,11 +48,13 @@ CONF_NOTIFICATIONS = "notifications"
 CONF_UNKNOWN = "unknown_consumption"
 
 
+
 # Subentries
 
 CONF_DEVICE_NAME = "device_name"
 CONF_DEVICE_TYPE = "device_type"
 CONF_DEVICE_SENSOR = "device_sensor"
+
 
 
 DEVICE_TYPES = [
@@ -51,6 +64,7 @@ DEVICE_TYPES = [
     "ev",
     "other"
 ]
+
 
 
 # Defaults
