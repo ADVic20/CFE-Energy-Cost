@@ -1,0 +1,20 @@
+{
+    "name": "DAC",
+    "country": "Mexico",
+    "currency": "MXN",
+
+    "period": "bimonthly",
+
+    "blocks": [
+        {
+            "name": "DAC",
+            "limit": -1,
+            "price": 6.50
+        }
+    ],
+
+    "charges": {
+        "iva": 0.16,
+        "dap": true
+    }
+}
