@@ -36,6 +36,9 @@ def load_tariff(
         encoding="utf-8"
     ) as tariff_file:
 
-        return json.load(
+        data = json.load(
             tariff_file
         )
+
+
+    return data
