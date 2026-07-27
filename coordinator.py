@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 
 from datetime import timedelta
-from .period import CFEPeriodStorage
 
 from homeassistant.core import HomeAssistant
 
@@ -25,6 +24,8 @@ from .tariffs.loader import load_tariff
 
 from .calculator import calculate_cfe_cost
 
+from .period import CFEPeriodStorage
+
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,13 +41,26 @@ class CFEEnergyCoordinator(
     def __init__(
         self,
         hass: HomeAssistant,
-        config: dict
+        config: dict,
+        entry_id: str
     ):
-
 
         self.hass = hass
 
         self.config = config
+
+
+        self.energy_sensor = (
+            config[
+                CONF_ENERGY_SENSOR
+            ]
+        )
+
+
+        self.period = CFEPeriodStorage(
+            hass,
+            entry_id
+        )
 
 
         super().__init__(
@@ -60,10 +74,17 @@ class CFEEnergyCoordinator(
 
 
 
-    async def _async_update_data(
+    async def async_initialize(
         self
     ):
 
+        await self.period.async_load()
+
+
+
+    async def _async_update_data(
+        self
+    ):
 
         try:
 
@@ -83,34 +104,49 @@ class CFEEnergyCoordinator(
     ):
 
 
-        energy_sensor = (
-            self.config[
-                CONF_ENERGY_SENSOR
-            ]
-        )
-
-
         state = self.hass.states.get(
-            energy_sensor
+            self.energy_sensor
         )
 
 
         if state is None:
 
             raise Exception(
-                f"Sensor not found: {energy_sensor}"
+                f"Energy sensor not found: {self.energy_sensor}"
             )
 
 
 
-        energy = float(
-            state.state
+        try:
+
+            meter_value = float(
+                state.state
+            )
+
+
+        except ValueError:
+
+            raise Exception(
+                "Invalid energy value"
+            )
+
+
+
+        #
+        # Consumo real del periodo
+        #
+
+        consumption = (
+            self.period
+            .calculate_consumption(
+                meter_value
+            )
         )
 
 
 
         #
-        # Tarifa
+        # Tarifa seleccionada
         #
 
         tariff = (
@@ -136,7 +172,7 @@ class CFEEnergyCoordinator(
 
 
         #
-        # País y región
+        # Región
         #
 
         country = "mexico"
@@ -161,8 +197,12 @@ class CFEEnergyCoordinator(
 
 
 
+        #
+        # Cálculo CFE
+        #
+
         result = calculate_cfe_cost(
-            energy,
+            consumption,
             tariff_data
         )
 
@@ -170,18 +210,70 @@ class CFEEnergyCoordinator(
 
         return {
 
-            "energy": energy,
+            # Medidor acumulado real
 
-            "tariff": tariff_data["name"],
+            "meter": meter_value,
 
-            "energy_cost": result["energy_cost"],
 
-            "iva": result["iva"],
+            # Consumo del periodo
 
-            "dap": result["dap"],
+            "energy": consumption,
 
-            "total": result["total"],
 
-            "blocks": result["blocks"]
+            # Datos del periodo
+
+            "initial_meter":
+            self.period.data.get(
+                "initial_meter"
+            ),
+
+
+            "start_date":
+            self.period.data.get(
+                "start_date"
+            ),
+
+
+
+            # Tarifa
+
+            "tariff":
+            tariff_data[
+                "name"
+            ],
+
+
+
+            # Costos
+
+            "energy_cost":
+            result[
+                "energy_cost"
+            ],
+
+
+            "iva":
+            result[
+                "iva"
+            ],
+
+
+            "dap":
+            result[
+                "dap"
+            ],
+
+
+            "total":
+            result[
+                "total"
+            ],
+
+
+
+            "blocks":
+            result[
+                "blocks"
+            ]
 
         }
