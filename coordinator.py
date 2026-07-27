@@ -194,7 +194,10 @@ class CFEEnergyCoordinator(
             region,
             tariff
         )
-
+        _LOGGER.error(
+             "DEBUG TARIFA: %s",
+             tariff_data
+        )
 
 
         #
