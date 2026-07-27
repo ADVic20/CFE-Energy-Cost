@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from datetime import timedelta
+import logging
 
+from datetime import timedelta
 
 from homeassistant.core import HomeAssistant
 
@@ -9,7 +10,6 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed
 )
-
 
 from .const import (
     DOMAIN,
@@ -23,7 +23,7 @@ from .tariffs.loader import load_tariff
 
 from .calculator import calculate_cfe_cost
 
-
+_LOGGER = logging.getLogger(__name__)
 
 class CFEEnergyCoordinator(
     DataUpdateCoordinator
@@ -43,9 +43,8 @@ class CFEEnergyCoordinator(
 
         super().__init__(
             hass,
-
+            _LOGGER,
             name=DOMAIN,
-
             update_interval=timedelta(
                 minutes=5
             )
