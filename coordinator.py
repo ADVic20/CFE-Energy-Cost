@@ -59,38 +59,38 @@ class CFEEnergyCoordinator(
 
         try:
 
-            return await self.calculate()
-
+            return await self.async_calculate()
 
 
         except Exception as error:
 
             raise UpdateFailed(
-                f"CFE calculation error: {error}"
+                f"CFE Energy Cost error: {error}"
             )
 
 
 
-    async def calculate(
+    async def async_calculate(
         self
     ):
 
 
-        sensor = (
-            self.config
-            [CONF_ENERGY_SENSOR]
+        energy_sensor = (
+            self.config[
+                CONF_ENERGY_SENSOR
+            ]
         )
 
 
         state = self.hass.states.get(
-            sensor
+            energy_sensor
         )
 
 
         if state is None:
 
             raise Exception(
-                f"Energy sensor not found: {sensor}"
+                f"Sensor not found: {energy_sensor}"
             )
 
 
@@ -104,22 +104,30 @@ class CFEEnergyCoordinator(
         except ValueError:
 
             raise Exception(
-                "Invalid energy value"
+                "Energy sensor value invalid"
             )
 
 
 
-        tariff_name = (
+        #
+        # Tarifa seleccionada
+        #
+
+        tariff = (
             self.config
             .get(
                 CONF_TARIFF,
-                "tarifa_1C"
+                "1C"
             )
             .lower()
         )
 
 
-        region = (
+        #
+        # Región
+        #
+
+        country = (
             self.config
             .get(
                 CONF_REGION,
@@ -130,16 +138,37 @@ class CFEEnergyCoordinator(
 
 
 
-        tariff = load_tariff(
-            region,
-            tariff_name
+        #
+        # Convertimos:
+        #
+        # 1C
+        #  |
+        #  v
+        # tarifa_1C.json
+        #
+
+        if not tariff.startswith(
+            "tarifa_"
+        ):
+
+            tariff = (
+                "tarifa_"
+                +
+                tariff
+            )
+
+
+
+        tariff_data = load_tariff(
+            country,
+            tariff
         )
 
 
 
         result = calculate_cfe_cost(
             energy,
-            tariff,
+            tariff_data,
             dap_amount=0
         )
 
@@ -149,16 +178,32 @@ class CFEEnergyCoordinator(
 
             "energy": energy,
 
-            "tariff": tariff["name"],
+            "tariff": tariff_data[
+                "name"
+            ],
 
-            "cost": result["energy_cost"],
+            "currency": tariff_data[
+                "currency"
+            ],
 
-            "iva": result["iva"],
+            "energy_cost": result[
+                "energy_cost"
+            ],
 
-            "dap": result["dap"],
+            "iva": result[
+                "iva"
+            ],
 
-            "total": result["total"],
+            "dap": result[
+                "dap"
+            ],
 
-            "blocks": result["blocks"]
+            "total": result[
+                "total"
+            ],
+
+            "blocks": result[
+                "blocks"
+            ]
 
         }
