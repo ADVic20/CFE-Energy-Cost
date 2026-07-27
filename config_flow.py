@@ -1,6 +1,7 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.helpers import selector
 
 from .const import (
     DOMAIN,
@@ -120,7 +121,12 @@ class CFEEnergyCostConfigFlow(
                 vol.Required(
                     CONF_ENERGY_SENSOR
                 ):
-                str
+                selector.EntitySelector(
+                    selector.EntitySelectorConfig(
+                        domain="sensor",
+                        device_class="energy"
+                     )
+                )
 
             }
         )
