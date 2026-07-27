@@ -63,14 +63,14 @@ class CFEEnergyCostConfigFlow(
 
                 vol.Required(
                     CONF_NAME,
-                    default="CFE Casa"
+                    default="CFE Principal"
                 ):
                 str,
 
 
                 vol.Required(
                     CONF_TARIFF,
-                    default="DAC"
+                    default="1C"
                 ):
                 vol.In(
                     [
@@ -85,7 +85,7 @@ class CFEEnergyCostConfigFlow(
 
                 vol.Required(
                     CONF_REGION,
-                    default="norte"
+                    default="Norte"
                 ):
                 str
 
@@ -160,10 +160,9 @@ class CFEEnergyCostConfigFlow(
             {
 
                 vol.Required(
-                    CONF_START_DATE,
-                    default="2026-01-01"
+                    CONF_START_DATE
                 ):
-                str,
+                selector.DateSelector(),
 
 
                 vol.Required(
