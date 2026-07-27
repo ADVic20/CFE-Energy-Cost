@@ -54,8 +54,8 @@ async def async_setup_entry(
 
         "coordinator": coordinator,
 
-        "config": entry.data
-
+        "config": entry.data,
+        "entry_id": entry.entry_id
     }
 
 
