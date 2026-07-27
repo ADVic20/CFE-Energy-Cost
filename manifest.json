@@ -1,0 +1,18 @@
+{
+  "domain": "cfe_energy_cost",
+  "name": "CFE Energy Cost",
+  "version": "1.0.0-alpha1",
+  "documentation": "https://github.com/ADVic20/CFE-Energy-Cost",
+  "issue_tracker": "https://github.com/ADVic20/CFE-Energy-Cost/issues",
+  "codeowners": [
+    "@ADVic20"
+  ],
+  "config_flow": true,
+  "iot_class": "local_polling",
+  "requirements": [],
+  "dependencies": [],
+  "integration_type": "service",
+  "loggers": [
+    "custom_components.cfe_energy_cost"
+  ]
+}
