@@ -9,9 +9,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 
-from homeassistant.helpers import device_registry as dr
-
-
 
 from .const import DOMAIN
 
@@ -21,7 +18,9 @@ from .coordinator import CFEEnergyCoordinator
 
 
 
+
 _LOGGER = logging.getLogger(__name__)
+
 
 
 
@@ -30,7 +29,11 @@ PLATFORMS = [
 
     "sensor",
 
+    "button",
+
 ]
+
+
 
 
 
@@ -62,19 +65,26 @@ async def async_setup_entry(
 
 
     hass.data.setdefault(
+
         DOMAIN,
+
         {}
+
     )
 
 
 
+
     hass.data[DOMAIN][
+
         entry.entry_id
+
     ] = {
 
 
         "coordinator":
-        coordinator
+
+            coordinator
 
     }
 
@@ -101,8 +111,11 @@ async def async_setup_entry(
 
 
 async def async_unload_entry(
+
     hass: HomeAssistant,
+
     entry: ConfigEntry
+
 ) -> bool:
 
 
@@ -117,12 +130,15 @@ async def async_unload_entry(
 
 
 
+
     if unload_ok:
 
 
         hass.data[DOMAIN].pop(
 
-            entry.entry_id
+            entry.entry_id,
+
+            None
 
         )
 
