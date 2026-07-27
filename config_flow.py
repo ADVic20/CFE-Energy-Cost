@@ -75,6 +75,7 @@ class CFEEnergyCostConfigFlow(
                         "1",
                         "1A",
                         "1B",
+                        "1C",
                         "DAC"
                     ]
                 ),
