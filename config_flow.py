@@ -2,6 +2,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.helpers import selector
+from datetime import date
 
 from .const import (
     DOMAIN,
@@ -12,7 +13,7 @@ from .const import (
 
     CONF_ENERGY_SENSOR,
 
-    CONF_START_DAY,
+    CONF_START_DATE,
     CONF_CYCLE,
 
     CONF_IVA,
@@ -159,10 +160,10 @@ class CFEEnergyCostConfigFlow(
             {
 
                 vol.Required(
-                    CONF_START_DAY,
-                    default=1
+                    CONF_START_DATE,
+                    default="2026-01-01"
                 ):
-                int,
+                str,
 
 
                 vol.Required(
