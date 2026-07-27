@@ -4,12 +4,14 @@ import logging
 
 from datetime import timedelta
 
+
 from homeassistant.core import HomeAssistant
 
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed
 )
+
 
 from .const import (
     DOMAIN,
@@ -23,7 +25,12 @@ from .tariffs.loader import load_tariff
 
 from .calculator import calculate_cfe_cost
 
+
+
 _LOGGER = logging.getLogger(__name__)
+
+
+
 
 class CFEEnergyCoordinator(
     DataUpdateCoordinator
@@ -35,6 +42,7 @@ class CFEEnergyCoordinator(
         hass: HomeAssistant,
         config: dict
     ):
+
 
         self.hass = hass
 
@@ -55,6 +63,7 @@ class CFEEnergyCoordinator(
     async def _async_update_data(
         self
     ):
+
 
         try:
 
@@ -93,23 +102,15 @@ class CFEEnergyCoordinator(
             )
 
 
-        try:
 
-            energy = float(
-                state.state
-            )
-
-
-        except ValueError:
-
-            raise Exception(
-                "Energy sensor value invalid"
-            )
+        energy = float(
+            state.state
+        )
 
 
 
         #
-        # Tarifa seleccionada
+        # Tarifa
         #
 
         tariff = (
@@ -121,30 +122,6 @@ class CFEEnergyCoordinator(
             .lower()
         )
 
-
-        #
-        # Región
-        #
-
-        country = (
-            self.config
-            .get(
-                CONF_REGION,
-                "mexico"
-            )
-            .lower()
-        )
-
-
-
-        #
-        # Convertimos:
-        #
-        # 1C
-        #  |
-        #  v
-        # tarifa_1C.json
-        #
 
         if not tariff.startswith(
             "tarifa_"
@@ -158,8 +135,27 @@ class CFEEnergyCoordinator(
 
 
 
+        #
+        # País y región
+        #
+
+        country = "mexico"
+
+
+        region = (
+            self.config
+            .get(
+                CONF_REGION,
+                "norte"
+            )
+            .lower()
+        )
+
+
+
         tariff_data = load_tariff(
             country,
+            region,
             tariff
         )
 
@@ -167,8 +163,7 @@ class CFEEnergyCoordinator(
 
         result = calculate_cfe_cost(
             energy,
-            tariff_data,
-            dap_amount=0
+            tariff_data
         )
 
 
@@ -177,32 +172,16 @@ class CFEEnergyCoordinator(
 
             "energy": energy,
 
-            "tariff": tariff_data[
-                "name"
-            ],
+            "tariff": tariff_data["name"],
 
-            "currency": tariff_data[
-                "currency"
-            ],
+            "energy_cost": result["energy_cost"],
 
-            "energy_cost": result[
-                "energy_cost"
-            ],
+            "iva": result["iva"],
 
-            "iva": result[
-                "iva"
-            ],
+            "dap": result["dap"],
 
-            "dap": result[
-                "dap"
-            ],
+            "total": result["total"],
 
-            "total": result[
-                "total"
-            ],
-
-            "blocks": result[
-                "blocks"
-            ]
+            "blocks": result["blocks"]
 
         }
