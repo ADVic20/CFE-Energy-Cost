@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 
 
-from datetime import timedelta
+from datetime import timedelta, date
 
 
 from homeassistant.core import HomeAssistant
@@ -12,17 +12,28 @@ from homeassistant.core import HomeAssistant
 
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
-    UpdateFailed
+    UpdateFailed,
 )
 
 
 
 from .const import (
     DOMAIN,
+
     CONF_ENERGY_SENSOR,
+
     CONF_TARIFF,
-    CONF_REGION
+    CONF_REGION,
+
+    CONF_START_DATE,
+
+    CONF_PERIOD_START,
+    CONF_PERIOD_END,
+
+    CONF_PREVIOUS_READING,
+    CONF_CURRENT_READING,
 )
+
 
 
 from .tariffs.loader import load_tariff
@@ -30,8 +41,6 @@ from .tariffs.loader import load_tariff
 
 from .calculator import calculate_cfe_cost
 
-
-from .period import CFEPeriodStorage
 
 
 
@@ -41,9 +50,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 
+
+
 class CFEEnergyCoordinator(
     DataUpdateCoordinator
 ):
+
 
 
     def __init__(
@@ -58,38 +70,25 @@ class CFEEnergyCoordinator(
 
         self.config = config
 
-
-        self.energy_sensor = config.get(
-            CONF_ENERGY_SENSOR
-        )
-
-
-
-        self.period = CFEPeriodStorage(
-            hass,
-            entry_id
-        )
+        self.entry_id = entry_id
 
 
 
         super().__init__(
+
             hass,
+
             _LOGGER,
+
             name=DOMAIN,
+
             update_interval=timedelta(
                 minutes=5
             )
+
         )
 
 
-
-
-    async def async_initialize(
-        self
-    ):
-
-
-        await self.period.async_load()
 
 
 
@@ -102,6 +101,7 @@ class CFEEnergyCoordinator(
 
         try:
 
+
             return await self.async_calculate()
 
 
@@ -110,8 +110,11 @@ class CFEEnergyCoordinator(
 
 
             raise UpdateFailed(
+
                 f"CFE Energy Cost error: {error}"
+
             )
+
 
 
 
@@ -124,34 +127,163 @@ class CFEEnergyCoordinator(
 
 
 
-        state = self.hass.states.get(
-            self.energy_sensor
+        #
+        # Lectura del medidor
+        #
+
+        meter = 0
+
+
+
+        sensor = self.config.get(
+            CONF_ENERGY_SENSOR
         )
 
 
 
-        if state is None:
+        if sensor:
 
-            raise Exception(
-                "Energy sensor not found"
+
+            state = self.hass.states.get(
+                sensor
             )
 
 
+            if state:
 
-        meter_value = float(
-            state.state
-        )
+
+                try:
+
+                    meter = float(
+                        state.state
+                    )
+
+
+                except ValueError:
+
+                    meter = 0
+
+
+
+
 
 
 
         #
-        # Consumo del recibo
+        # Lecturas del recibo
         #
 
-        consumption = (
-            self.period
-            .get_consumption()
+        previous = float(
+
+            self.config.get(
+
+                CONF_PREVIOUS_READING,
+
+                0
+
+            )
+
         )
+
+
+
+        current = float(
+
+            self.config.get(
+
+                CONF_CURRENT_READING,
+
+                0
+
+            )
+
+        )
+
+
+
+
+
+        consumption = round(
+
+            current - previous,
+
+            2
+
+        )
+
+
+
+        if consumption < 0:
+
+            consumption = 0
+
+
+
+
+
+
+
+
+        #
+        # Fechas
+        #
+
+        period_start = self.config.get(
+
+            CONF_PERIOD_START
+
+        )
+
+
+        period_end = self.config.get(
+
+            CONF_PERIOD_END
+
+        )
+
+
+
+
+        days = 0
+
+
+
+        if period_start and period_end:
+
+
+            try:
+
+
+                start = date.fromisoformat(
+
+                    str(period_start)
+
+                )
+
+
+                end = date.fromisoformat(
+
+                    str(period_end)
+
+                )
+
+
+                days = (
+
+                    end - start
+
+                ).days
+
+
+
+            except Exception:
+
+
+                days = 0
+
+
+
+
 
 
 
@@ -160,59 +292,69 @@ class CFEEnergyCoordinator(
         #
 
         tariff = self.config.get(
+
             CONF_TARIFF,
+
             "1C"
+
         )
 
 
-
-        tariff = tariff.lower()
-
-
-
-        if not tariff.startswith(
-            "tarifa_"
-        ):
-
-            tariff = (
-                "tarifa_"
-                +
-                tariff
-            )
-
-
-
-        #
-        # Región
-        #
 
         region = self.config.get(
+
             CONF_REGION,
+
             "norte"
+
         )
 
 
 
-        tariff_data = load_tariff(
+
+
+        tariff_file = load_tariff(
+
             "mexico",
+
             region,
-            tariff
+
+            f"tarifa_{tariff.lower()}"
+
         )
 
 
 
-        if tariff_data is None:
+        if tariff_file is None:
+
 
             raise Exception(
-                "Tariff not found"
+
+                f"Tariff not found: {tariff}"
+
             )
 
 
 
+
+
+
+
+        #
+        # Calculo CFE
+        #
+
         result = calculate_cfe_cost(
+
             consumption,
-            tariff_data
+
+            tariff_file
+
         )
+
+
+
+
 
 
 
@@ -220,76 +362,122 @@ class CFEEnergyCoordinator(
         return {
 
 
-            "meter": meter_value,
+            "meter":
 
-
-            "energy": consumption,
-
-
-
-            "period_start":
-            self.period.data.get(
-                "start_date"
-            ),
+                meter,
 
 
 
-            "period_end":
-            self.period.data.get(
-                "end_date"
-            ),
+            "consumption":
+
+                consumption,
 
 
 
             "previous_reading":
-            self.period.data.get(
-                "previous_reading"
-            ),
+
+                previous,
 
 
 
             "current_reading":
-            self.period.data.get(
-                "current_reading"
-            ),
+
+                current,
+
+
+
+            "period_start":
+
+                period_start,
+
+
+
+            "period_end":
+
+                period_end,
+
+
+
+            "cut_date":
+
+                self.config.get(
+
+                    CONF_START_DATE
+
+                ),
+
+
+
+            "days":
+
+                days,
 
 
 
             "tariff":
-            tariff_data.get(
-                "name"
-            ),
+
+                tariff_file.get(
+
+                    "name",
+
+                    tariff
+
+                ),
+
+
+
+            "region":
+
+                region,
 
 
 
             "energy_cost":
-            result.get(
-                "energy_cost",
-                0
-            ),
+
+                result.get(
+
+                    "energy_cost",
+
+                    0
+
+                ),
 
 
 
             "iva":
-            result.get(
-                "iva",
-                0
-            ),
+
+                result.get(
+
+                    "iva",
+
+                    0
+
+                ),
 
 
 
             "dap":
-            result.get(
-                "dap",
-                0
-            ),
+
+                result.get(
+
+                    "dap",
+
+                    0
+
+                ),
 
 
 
             "total":
-            result.get(
-                "total",
-                0
-            )
+
+                result.get(
+
+                    "total",
+
+                    0
+
+                ),
+
+
 
         }
