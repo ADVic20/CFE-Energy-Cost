@@ -1,49 +1,32 @@
 from __future__ import annotations
 
-
-
 from homeassistant.components.button import (
-    ButtonEntity
+    ButtonEntity,
 )
-
-
 
 from homeassistant.helpers.entity import (
-    EntityCategory
+    EntityCategory,
 )
 
-
-
-from .const import (
-
-    DOMAIN,
-
-    CONF_PREVIOUS_READING,
-
-    CONF_CURRENT_READING
-
-)
-
-
-
-
-
+from .const import DOMAIN
 
 
 async def async_setup_entry(
     hass,
     entry,
-    async_add_entities
+    async_add_entities,
 ):
 
+    coordinator = hass.data[DOMAIN][entry.entry_id][
+        "coordinator"
+    ]
 
     async_add_entities(
 
         [
 
-            CFEPeriodResetButton(
-                hass,
-                entry
+            CFENewPeriodButton(
+                coordinator
             )
 
         ]
@@ -51,115 +34,41 @@ async def async_setup_entry(
     )
 
 
-
-
-
-
-
-
-
-class CFEPeriodResetButton(
+class CFENewPeriodButton(
     ButtonEntity
 ):
 
-
-    _attr_name = (
-        "CFE Nuevo Periodo"
-    )
-
-
-    _attr_icon = (
-        "mdi:file-refresh"
-    )
-
-
+    _attr_icon = "mdi:file-refresh"
 
     _attr_entity_category = (
         EntityCategory.CONFIG
     )
 
-
-
-
-
-
     def __init__(
         self,
-        hass,
-        entry
+        coordinator,
     ):
 
+        self.coordinator = coordinator
 
-        self.hass = hass
-
-        self.entry = entry
-
+        self._attr_name = (
+            "CFE Nuevo Periodo"
+        )
 
         self._attr_unique_id = (
 
-            f"{DOMAIN}_new_period_"
+            f"{DOMAIN}_"
 
-            f"{entry.entry_id}"
+            f"{coordinator.entry_id}"
+
+            "_new_period"
 
         )
-
-
-
-
-
-
 
     async def async_press(
-        self
+        self,
     ):
 
-
-        data = dict(
-            self.entry.data
-        )
-
-
-
-        current = float(
-
-            data.get(
-
-                CONF_CURRENT_READING,
-
-                0
-
-            )
-
-        )
-
-
-
-        data[
-
-            CONF_PREVIOUS_READING
-
-        ] = current
-
-
-
-
-        data[
-
-            CONF_CURRENT_READING
-
-        ] = 0
-
-
-
-
-
-        self.hass.config_entries.async_update_entry(
-
-            self.entry,
-
-            data=data
-
-        )
-
+        await self.coordinator.async_start_new_period()
 
         await self.coordinator.async_request_refresh()
