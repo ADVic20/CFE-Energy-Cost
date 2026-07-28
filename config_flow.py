@@ -75,7 +75,7 @@ from .const import (
 
 
 
-class CFEEnergyCostConfigFlow(
+class ConfigFlow(
     config_entries.ConfigFlow,
     domain=DOMAIN
 ):
