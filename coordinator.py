@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+import logging
 
 from homeassistant.core import HomeAssistant
 
@@ -10,6 +11,9 @@ from homeassistant.helpers.update_coordinator import (
 
 from .calculator import calculate_cfe_cost
 from .period import CFEPeriodStorage
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class CFEEnergyCoordinator(
@@ -26,7 +30,7 @@ class CFEEnergyCoordinator(
 
         super().__init__(
             hass,
-            logger=None,
+            _LOGGER,
             name="CFE Energy Cost",
         )
 
@@ -34,7 +38,9 @@ class CFEEnergyCoordinator(
 
         self.config = config
 
-        self.energy_sensor = config["energy_sensor"]
+        self.energy_sensor = config[
+            "energy_sensor"
+        ]
 
         self.period = CFEPeriodStorage(
             hass,
@@ -43,11 +49,13 @@ class CFEEnergyCoordinator(
 
         self.data = {}
 
+
     async def async_config_entry_first_refresh(
         self,
     ):
 
         await self.async_request_refresh()
+
 
     async def async_start_new_period(
         self,
@@ -60,32 +68,43 @@ class CFEEnergyCoordinator(
         if state is None:
             return
 
+
         meter = float(
             state.state
         )
 
-        await self.period.start_new_period(
 
-            reading=meter,
+        await self.period.async_set_period(
 
-            cut_date=self.config[
+            start_date=self.config.get(
                 "start_date"
-            ],
+            ),
+
+            end_date=self.config.get(
+                "period_end"
+            ),
+
+            previous_reading=meter,
+
+            current_reading=meter,
 
         )
 
-        await self.async_request_refresh()
 
-    async def _async_update_data(
+        await self.async_request_refresh()
+            async def _async_update_data(
         self,
     ):
+
         state = self.hass.states.get(
             self.energy_sensor
         )
 
+
         if state is None:
 
             return self.data
+
 
         try:
 
@@ -93,9 +112,14 @@ class CFEEnergyCoordinator(
                 state.state
             )
 
-        except (TypeError, ValueError):
+        except (
+            TypeError,
+            ValueError
+        ):
 
             current_reading = 0.0
+
+
 
         previous_reading = float(
 
@@ -109,27 +133,43 @@ class CFEEnergyCoordinator(
 
         )
 
+
+
         period_start = self.config.get(
             "period_start"
         )
+
 
         period_end = self.config.get(
             "period_end"
         )
 
+
         cut_date = self.config.get(
             "start_date"
         )
 
+
+
         consumption = max(
+
             0,
-            current_reading - previous_reading,
+
+            current_reading - previous_reading
+
         )
 
+
+
         unknown_consumption = max(
+
             0,
-            previous_reading - current_reading,
+
+            previous_reading - current_reading
+
         )
+
+
 
         try:
 
@@ -141,119 +181,199 @@ class CFEEnergyCoordinator(
                 period_end
             )
 
+
             days = (
+
                 end - start
+
             ).days + 1
+
+
 
         except Exception:
 
             days = 0
 
-        bill = calculate_cfe_cost(
 
-            tariff=self.config.get(
-                "tariff"
-            ),
 
-            region=self.config.get(
-                "region"
-            ),
 
-            consumption=consumption,
+        tariff_data = self.config.get(
 
-            days=days,
+            "tariff_data",
 
-            iva=self.config.get(
-                "iva",
-                True,
-            ),
-
-            dap=self.config.get(
-                "dap",
-                True,
-            ),
+            {}
 
         )
+
+
+
+        dap_amount = self.config.get(
+
+            "dap_amount",
+
+            0
+
+        )
+
+
+
+
+        bill = calculate_cfe_cost(
+
+            energy_kwh=consumption,
+
+            tariff_data=tariff_data,
+
+            dap_amount=dap_amount,
+
+        )
+
+
+
 
         self.data = {
 
             "consumption":
+
                 consumption,
 
+
             "previous_reading":
+
                 previous_reading,
 
+
             "current_reading":
+
                 current_reading,
 
+
             "unknown_consumption":
+
                 unknown_consumption,
 
+
             "days":
+
                 days,
 
+
             "tariff":
+
                 self.config.get(
+
                     "tariff"
+
                 ),
+
 
             "region":
+
                 self.config.get(
+
                     "region"
+
                 ),
+
 
             "period_start":
+
                 period_start,
 
+
             "period_end":
+
                 period_end,
 
+
             "cut_date":
+
                 cut_date,
 
+
+
             "energy_cost":
+
                 bill.get(
+
                     "energy_cost",
-                    0,
+
+                    0
+
                 ),
+
+
 
             "iva":
+
                 bill.get(
+
                     "iva",
-                    0,
+
+                    0
+
                 ),
+
+
 
             "dap":
+
                 bill.get(
+
                     "dap",
-                    0,
+
+                    0
+
                 ),
+
+
 
             "total":
+
                 bill.get(
+
                     "total",
-                    0,
+
+                    0
+
                 ),
+
+
 
             "blocks":
+
                 bill.get(
+
                     "blocks",
-                    [],
+
+                    []
+
                 ),
 
-            "period": {
 
-                "start":
-                    period_start,
 
-                "end":
-                    period_end,
+            "period":
 
-                "days":
-                    days,
+                {
 
-            },
+                    "start":
+
+                        period_start,
+
+
+                    "end":
+
+                        period_end,
+
+
+                    "days":
+
+                        days,
+
+                },
 
         }
+
+
 
         return self.data
