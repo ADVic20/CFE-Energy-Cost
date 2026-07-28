@@ -9,6 +9,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
+from .tariff_loader import load_tariff
 from .calculator import calculate_cfe_cost
 from .period import CFEPeriodStorage
 
@@ -232,21 +233,32 @@ class CFEEnergyCoordinator(
             days = 0
 
 
+        tariff_data = load_tariff(
+                
+            self.config.get(
+                 "tariff",
+                 "1c"
+            ),
 
+            self.config.get(
+                "region",
+                "norte"
+            ),
 
+        )
 
         bill = calculate_cfe_cost(
 
             energy_kwh=consumption,
 
+            tariff_data=tariff_data(
 
-            tariff_data=self.config.get(
-
-                "tariff_data",
-
-                {}
-
+            dap_amount=self.config.get(
+                "dap_amount",
+                0
             ),
+
+        )
 
 
             dap_amount=self.config.get(
