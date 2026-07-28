@@ -9,7 +9,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .calculator import calculate_cfe_cost
-from .period import BillingPeriod
+from .period import CFEPeriodStorage
 
 
 class CFEEnergyCoordinator(
@@ -36,7 +36,7 @@ class CFEEnergyCoordinator(
 
         self.energy_sensor = config["energy_sensor"]
 
-        self.period = BillingPeriod(
+        self.period = CFEPeriodStorage(
             hass,
             entry_id,
         )
