@@ -260,21 +260,6 @@ class CFEEnergyCoordinator(
 
         )
 
-
-            dap_amount=self.config.get(
-
-                "dap_amount",
-
-                0
-
-            ),
-
-        )
-
-
-
-
-
         self.data = {
 
 
