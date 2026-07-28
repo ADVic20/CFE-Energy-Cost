@@ -2,8 +2,8 @@
   "domain": "cfe_energy_cost",
   "name": "CFE Energy Cost",
   "version": "1.0.0-alpha1",
-  "documentation": "https://github.com/ADVic20/CFE-Energy-Cost",
-  "issue_tracker": "https://github.com/ADVic20/CFE-Energy-Cost/issues",
+  "documentation": "https://github.com/ADVic20/cfe_energy_cost",
+  "issue_tracker": "https://github.com/ADVic20/cfe_energy_cost",
   "codeowners": [
     "@ADVic20"
   ],
