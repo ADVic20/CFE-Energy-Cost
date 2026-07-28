@@ -21,6 +21,7 @@ class CFEEnergyCoordinator(
 ):
     """Coordinator de CFE Energy Cost."""
 
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -28,26 +29,34 @@ class CFEEnergyCoordinator(
         entry_id: str,
     ) -> None:
 
+
         super().__init__(
             hass,
             _LOGGER,
             name="CFE Energy Cost",
         )
 
+
         self.entry_id = entry_id
 
+
         self.config = config
+
 
         self.energy_sensor = config[
             "energy_sensor"
         ]
+
 
         self.period = CFEPeriodStorage(
             hass,
             entry_id,
         )
 
+
         self.data = {}
+
+
 
 
     async def async_config_entry_first_refresh(
@@ -57,21 +66,29 @@ class CFEEnergyCoordinator(
         await self.async_request_refresh()
 
 
+
+
+
     async def async_start_new_period(
         self,
     ):
+
 
         state = self.hass.states.get(
             self.energy_sensor
         )
 
+
         if state is None:
+
             return
+
 
 
         meter = float(
             state.state
         )
+
 
 
         await self.period.async_set_period(
@@ -80,21 +97,28 @@ class CFEEnergyCoordinator(
                 "start_date"
             ),
 
+
             end_date=self.config.get(
                 "period_end"
             ),
 
+
             previous_reading=meter,
+
 
             current_reading=meter,
 
         )
 
 
+
         await self.async_request_refresh()
-            async def _async_update_data(
+    
+    
+    async def _async_update_data(
         self,
     ):
+
 
         state = self.hass.states.get(
             self.energy_sensor
@@ -106,11 +130,13 @@ class CFEEnergyCoordinator(
             return self.data
 
 
+
         try:
 
             current_reading = float(
                 state.state
             )
+
 
         except (
             TypeError,
@@ -118,6 +144,8 @@ class CFEEnergyCoordinator(
         ):
 
             current_reading = 0.0
+
+
 
 
 
@@ -132,6 +160,8 @@ class CFEEnergyCoordinator(
             )
 
         )
+
+
 
 
 
@@ -151,6 +181,8 @@ class CFEEnergyCoordinator(
 
 
 
+
+
         consumption = max(
 
             0,
@@ -158,6 +190,8 @@ class CFEEnergyCoordinator(
             current_reading - previous_reading
 
         )
+
+
 
 
 
@@ -171,11 +205,14 @@ class CFEEnergyCoordinator(
 
 
 
+
+
         try:
 
             start = date.fromisoformat(
                 period_start
             )
+
 
             end = date.fromisoformat(
                 period_end
@@ -197,41 +234,37 @@ class CFEEnergyCoordinator(
 
 
 
-        tariff_data = self.config.get(
-
-            "tariff_data",
-
-            {}
-
-        )
-
-
-
-        dap_amount = self.config.get(
-
-            "dap_amount",
-
-            0
-
-        )
-
-
-
 
         bill = calculate_cfe_cost(
 
             energy_kwh=consumption,
 
-            tariff_data=tariff_data,
 
-            dap_amount=dap_amount,
+            tariff_data=self.config.get(
+
+                "tariff_data",
+
+                {}
+
+            ),
+
+
+            dap_amount=self.config.get(
+
+                "dap_amount",
+
+                0
+
+            ),
 
         )
 
 
 
 
+
         self.data = {
+
 
             "consumption":
 
@@ -261,18 +294,14 @@ class CFEEnergyCoordinator(
             "tariff":
 
                 self.config.get(
-
                     "tariff"
-
                 ),
 
 
             "region":
 
                 self.config.get(
-
                     "region"
-
                 ),
 
 
@@ -295,11 +324,8 @@ class CFEEnergyCoordinator(
             "energy_cost":
 
                 bill.get(
-
                     "energy_cost",
-
                     0
-
                 ),
 
 
@@ -307,11 +333,8 @@ class CFEEnergyCoordinator(
             "iva":
 
                 bill.get(
-
                     "iva",
-
                     0
-
                 ),
 
 
@@ -319,11 +342,8 @@ class CFEEnergyCoordinator(
             "dap":
 
                 bill.get(
-
                     "dap",
-
                     0
-
                 ),
 
 
@@ -331,11 +351,8 @@ class CFEEnergyCoordinator(
             "total":
 
                 bill.get(
-
                     "total",
-
                     0
-
                 ),
 
 
@@ -343,11 +360,8 @@ class CFEEnergyCoordinator(
             "blocks":
 
                 bill.get(
-
                     "blocks",
-
                     []
-
                 ),
 
 
@@ -371,6 +385,7 @@ class CFEEnergyCoordinator(
                         days,
 
                 },
+
 
         }
 
