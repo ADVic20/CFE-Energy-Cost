@@ -1,81 +1,57 @@
 from __future__ import annotations
 
-import logging
-from pathlib import Path
-import json
+from datetime import date
 
 from homeassistant.core import HomeAssistant
+
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from homeassistant.helpers.event import (
-    async_track_state_change_event,
-)
-
-from homeassistant.core import callback
-
-from .calculator import calculate_cfe_cost
-from .period import CFEPeriodStorage
-from .const import (
-    CONF_ENERGY_SENSOR,
-    CONF_TARIFF,
-)
-
-_LOGGER = logging.getLogger(__name__)
+from .calculator import calculate_bill
+from .period import BillingPeriod
 
 
-class CFEEnergyCoordinator(DataUpdateCoordinator):
-    """Coordinator CFE Energy Cost."""
+class CFEEnergyCoordinator(
+    DataUpdateCoordinator,
+):
+    """Coordinator de CFE Energy Cost."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         config: dict,
         entry_id: str,
-    ):
+    ) -> None:
 
         super().__init__(
             hass,
-            _LOGGER,
+            logger=None,
             name="CFE Energy Cost",
         )
 
-        self.config = config
         self.entry_id = entry_id
 
-        self.energy_sensor = config[CONF_ENERGY_SENSOR]
+        self.config = config
 
-        self.tariff = config[CONF_TARIFF]
+        self.energy_sensor = config["energy_sensor"]
 
-        self.period = CFEPeriodStorage(
+        self.period = BillingPeriod(
             hass,
             entry_id,
         )
 
-        self.cost = {}
+        self.data = {}
 
-    async def async_config_entry_first_refresh(self):
-
-        await self.period.async_load()
-
-        await self._async_update_data()
-
-        async_track_state_change_event(
-            self.hass,
-            [self.energy_sensor],
-            self._sensor_updated,
-        )
-
-    @callback
-    async def _sensor_updated(
+    async def async_config_entry_first_refresh(
         self,
-        event,
     ):
 
-        await self.async_refresh()
+        await self.async_request_refresh()
 
-    async def _async_update_data(self):
+    async def async_start_new_period(
+        self,
+    ):
 
         state = self.hass.states.get(
             self.energy_sensor
@@ -84,37 +60,200 @@ class CFEEnergyCoordinator(DataUpdateCoordinator):
         if state is None:
             return
 
+        meter = float(
+            state.state
+        )
+
+        await self.period.start_new_period(
+
+            reading=meter,
+
+            cut_date=self.config[
+                "start_date"
+            ],
+
+        )
+
+        await self.async_request_refresh()
+
+    async def _async_update_data(
+        self,
+    ):
+        state = self.hass.states.get(
+            self.energy_sensor
+        )
+
+        if state is None:
+
+            return self.data
+
         try:
-            current_energy = float(
+
+            current_reading = float(
                 state.state
             )
 
-        except (ValueError, TypeError):
-            return
+        except (TypeError, ValueError):
 
-        consumption = self.period.calculate_consumption(
-            current_energy
+            current_reading = 0.0
+
+        previous_reading = float(
+
+            self.config.get(
+
+                "previous_reading",
+
+                0
+
+            )
+
         )
 
-        tariff_file = (
-            Path(__file__).parent
-            / "tariffs"
-            / f"{self.tariff}.json"
+        period_start = self.config.get(
+            "period_start"
         )
 
-        with open(
-            tariff_file,
-            "r",
-            encoding="utf-8",
-        ) as file:
-
-            tariff_data = json.load(file)
-
-        self.cost = calculate_cfe_cost(
-            consumption,
-            tariff_data,
+        period_end = self.config.get(
+            "period_end"
         )
 
-        self.async_update_listeners()
+        cut_date = self.config.get(
+            "start_date"
+        )
 
-        return self.cost
+        consumption = max(
+            0,
+            current_reading - previous_reading,
+        )
+
+        unknown_consumption = max(
+            0,
+            previous_reading - current_reading,
+        )
+
+        try:
+
+            start = date.fromisoformat(
+                period_start
+            )
+
+            end = date.fromisoformat(
+                period_end
+            )
+
+            days = (
+                end - start
+            ).days + 1
+
+        except Exception:
+
+            days = 0
+
+        bill = calculate_bill(
+
+            tariff=self.config.get(
+                "tariff"
+            ),
+
+            region=self.config.get(
+                "region"
+            ),
+
+            consumption=consumption,
+
+            days=days,
+
+            iva=self.config.get(
+                "iva",
+                True,
+            ),
+
+            dap=self.config.get(
+                "dap",
+                True,
+            ),
+
+        )
+
+        self.data = {
+
+            "consumption":
+                consumption,
+
+            "previous_reading":
+                previous_reading,
+
+            "current_reading":
+                current_reading,
+
+            "unknown_consumption":
+                unknown_consumption,
+
+            "days":
+                days,
+
+            "tariff":
+                self.config.get(
+                    "tariff"
+                ),
+
+            "region":
+                self.config.get(
+                    "region"
+                ),
+
+            "period_start":
+                period_start,
+
+            "period_end":
+                period_end,
+
+            "cut_date":
+                cut_date,
+
+            "energy_cost":
+                bill.get(
+                    "energy_cost",
+                    0,
+                ),
+
+            "iva":
+                bill.get(
+                    "iva",
+                    0,
+                ),
+
+            "dap":
+                bill.get(
+                    "dap",
+                    0,
+                ),
+
+            "total":
+                bill.get(
+                    "total",
+                    0,
+                ),
+
+            "blocks":
+                bill.get(
+                    "blocks",
+                    [],
+                ),
+
+            "period": {
+
+                "start":
+                    period_start,
+
+                "end":
+                    period_end,
+
+                "days":
+                    days,
+
+            },
+
+        }
+
+        return self.data
