@@ -46,6 +46,7 @@ SENSORS = [
 ]
 
 
+
 async def async_setup_entry(
     hass,
     entry,
@@ -54,9 +55,11 @@ async def async_setup_entry(
 
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
 
+
     async_add_entities(
 
         [
+
             CFESensor(
                 coordinator,
                 key,
@@ -65,15 +68,18 @@ async def async_setup_entry(
             )
 
             for key, name, unit in SENSORS
+
         ]
 
     )
+
 
 
 class CFESensor(
     CoordinatorEntity,
     SensorEntity,
 ):
+
 
     def __init__(
         self,
@@ -83,28 +89,44 @@ class CFESensor(
         unit,
     ):
 
-        super().__init__(coordinator)
+
+        super().__init__(
+            coordinator
+        )
+
 
         self.key = key
 
+
         self._attr_name = name
 
+
         self._attr_unique_id = (
+
             f"{DOMAIN}_{coordinator.entry_id}_{key}"
+
         )
 
+
         if unit:
+
             self._attr_native_unit_of_measurement = unit
+
+
 
     @property
     def native_value(self):
 
         if self.coordinator.data is None:
+
             return None
+
 
         return self.coordinator.data.get(
             self.key
         )
+
+
 
     @property
     def device_class(self):
@@ -123,6 +145,8 @@ class CFESensor(
 
             return SensorDeviceClass.ENERGY
 
+
+
         if self.key in (
 
             "energy_cost",
@@ -137,10 +161,15 @@ class CFESensor(
 
             return SensorDeviceClass.MONETARY
 
+
+
         return None
+
+
 
     @property
     def state_class(self):
+
 
         if self.key in (
 
@@ -154,9 +183,29 @@ class CFESensor(
 
         ):
 
-            return SensorStateClass.MEASUREMENT
+            return SensorStateClass.TOTAL
+
+
+
+        if self.key in (
+
+            "energy_cost",
+
+            "iva",
+
+            "dap",
+
+            "total",
+
+        ):
+
+            return SensorStateClass.TOTAL
+
+
 
         return None
+
+
 
     @property
     def extra_state_attributes(self):
@@ -165,23 +214,35 @@ class CFESensor(
 
             return None
 
+
         return {
 
-            "Bloques": self.coordinator.data.get(
-                "blocks",
-                []
-            ),
+            "Bloques":
 
-            "Periodo": self.coordinator.data.get(
-                "period"
-            ),
+                self.coordinator.data.get(
+                    "blocks",
+                    []
+                ),
 
-            "Tarifa": self.coordinator.data.get(
-                "tariff"
-            ),
 
-            "Región": self.coordinator.data.get(
-                "region"
-            ),
+            "Periodo":
+
+                self.coordinator.data.get(
+                    "period"
+                ),
+
+
+            "Tarifa":
+
+                self.coordinator.data.get(
+                    "tariff"
+                ),
+
+
+            "Región":
+
+                self.coordinator.data.get(
+                    "region"
+                ),
 
         }
