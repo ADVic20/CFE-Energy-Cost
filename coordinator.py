@@ -251,7 +251,7 @@ class CFEEnergyCoordinator(
 
             energy_kwh=consumption,
 
-            tariff_data=tariff_data(
+            tariff_data=tariff_data,
 
             dap_amount=self.config.get(
                 "dap_amount",
