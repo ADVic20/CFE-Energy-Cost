@@ -8,7 +8,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .calculator import calculate_bill
+from .calculator import calculate_cfe_cost
 from .period import BillingPeriod
 
 
@@ -149,7 +149,7 @@ class CFEEnergyCoordinator(
 
             days = 0
 
-        bill = calculate_bill(
+        bill = calculate_cfe_cost(
 
             tariff=self.config.get(
                 "tariff"
