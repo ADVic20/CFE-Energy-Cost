@@ -1,280 +1,187 @@
 from __future__ import annotations
 
-
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorDeviceClass,
     SensorStateClass,
 )
 
-
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
 )
 
-
 from .const import DOMAIN
 
 
+SENSORS = [
 
+    ("consumption", "CFE Consumo", "kWh"),
+
+    ("energy_cost", "CFE Costo Energía", "MXN"),
+
+    ("iva", "CFE IVA", "MXN"),
+
+    ("dap", "CFE DAP", "MXN"),
+
+    ("total", "CFE Recibo Estimado", "MXN"),
+
+    ("previous_reading", "CFE Lectura Anterior", "kWh"),
+
+    ("current_reading", "CFE Lectura Actual", "kWh"),
+
+    ("days", "CFE Días del Periodo", "días"),
+
+    ("tariff", "CFE Tarifa", None),
+
+    ("region", "CFE Región", None),
+
+    ("period_start", "CFE Inicio del Periodo", None),
+
+    ("period_end", "CFE Fin del Periodo", None),
+
+    ("cut_date", "CFE Fecha de Corte", None),
+
+    ("unknown_consumption", "CFE Consumo Desconocido", "kWh"),
+
+]
 
 
 async def async_setup_entry(
     hass,
     entry,
-    async_add_entities
+    async_add_entities,
 ):
 
-
-    coordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ][
-        "coordinator"
-    ]
-
-
-
-    entities = [
-
-
-        CFESensor(
-            coordinator,
-            "consumption",
-            "CFE Consumo",
-            "kWh"
-        ),
-
-
-
-        CFESensor(
-            coordinator,
-            "energy_cost",
-            "CFE Costo Energía",
-            "MXN"
-        ),
-
-
-
-        CFESensor(
-            coordinator,
-            "iva",
-            "CFE IVA",
-            "MXN"
-        ),
-
-
-
-        CFESensor(
-            coordinator,
-            "dap",
-            "CFE DAP",
-            "MXN"
-        ),
-
-
-
-        CFESensor(
-            coordinator,
-            "total",
-            "CFE Recibo Estimado",
-            "MXN"
-        ),
-
-
-
-
-        CFESensor(
-            coordinator,
-            "previous_reading",
-            "CFE Lectura Anterior",
-            "kWh"
-        ),
-
-
-
-        CFESensor(
-            coordinator,
-            "current_reading",
-            "CFE Lectura Actual",
-            "kWh"
-        ),
-
-
-
-
-        CFESensor(
-            coordinator,
-            "days",
-            "CFE Días Periodo",
-            "días"
-        ),
-
-
-
-        CFESensor(
-            coordinator,
-            "tariff",
-            "CFE Tarifa",
-            None
-        ),
-
-
-
-        CFESensor(
-            coordinator,
-            "region",
-            "CFE Región",
-            None
-        ),
-
-
-
-        CFESensor(
-            coordinator,
-            "period_start",
-            "CFE Inicio Periodo",
-            None
-        ),
-
-
-
-        CFESensor(
-            coordinator,
-            "period_end",
-            "CFE Fin Periodo",
-            None
-        ),
-
-
-
-        CFESensor(
-            coordinator,
-            "cut_date",
-            "CFE Fecha Corte",
-            None
-        ),
-
-    ]
-
-
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
 
     async_add_entities(
-        entities
+
+        [
+            CFESensor(
+                coordinator,
+                key,
+                name,
+                unit,
+            )
+
+            for key, name, unit in SENSORS
+        ]
+
     )
-
-
-
-
-
-
 
 
 class CFESensor(
     CoordinatorEntity,
-    SensorEntity
+    SensorEntity,
 ):
-
 
     def __init__(
         self,
         coordinator,
         key,
         name,
-        unit
+        unit,
     ):
 
-
-        super().__init__(
-            coordinator
-        )
-
+        super().__init__(coordinator)
 
         self.key = key
 
-
         self._attr_name = name
 
-
         self._attr_unique_id = (
-            f"{DOMAIN}_{key}"
+            f"{DOMAIN}_{coordinator.entry_id}_{key}"
         )
 
-
-
         if unit:
-
             self._attr_native_unit_of_measurement = unit
 
-
-
-
-
     @property
-    def native_value(
-        self
-    ):
+    def native_value(self):
 
-
-        if not self.coordinator.data:
-
+        if self.coordinator.data is None:
             return None
-
-
 
         return self.coordinator.data.get(
             self.key
         )
 
-
-
-
-
     @property
-    def device_class(
-        self
-    ):
-
+    def device_class(self):
 
         if self.key in (
+
             "consumption",
+
             "previous_reading",
-            "current_reading"
+
+            "current_reading",
+
+            "unknown_consumption",
+
         ):
 
             return SensorDeviceClass.ENERGY
 
-
         if self.key in (
+
             "energy_cost",
+
             "iva",
+
             "dap",
-            "total"
+
+            "total",
+
         ):
 
             return SensorDeviceClass.MONETARY
 
-
-
         return None
-
-
-
-
-
 
     @property
-    def state_class(
-        self
-    ):
-
+    def state_class(self):
 
         if self.key in (
+
             "consumption",
+
             "previous_reading",
-            "current_reading"
+
+            "current_reading",
+
+            "unknown_consumption",
+
         ):
 
-            return SensorStateClass.TOTAL_INCREASING
-
+            return SensorStateClass.MEASUREMENT
 
         return None
+
+    @property
+    def extra_state_attributes(self):
+
+        if self.key != "total":
+
+            return None
+
+        return {
+
+            "Bloques": self.coordinator.data.get(
+                "blocks",
+                []
+            ),
+
+            "Periodo": self.coordinator.data.get(
+                "period"
+            ),
+
+            "Tarifa": self.coordinator.data.get(
+                "tariff"
+            ),
+
+            "Región": self.coordinator.data.get(
+                "region"
+            ),
+
+        }
