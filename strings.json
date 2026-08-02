@@ -24,6 +24,17 @@
                     "pdf": "Exportar PDF",
                     "notifications": "Notificaciones"
                 }
+            },
+
+            "loads": {
+                "title": "Cargas de consumo",
+                "description": "Agrega equipos para estimar su consumo eléctrico",
+                "data": {
+                    "load_name": "Nombre del equipo",
+                    "load_power": "Potencia del equipo (W)",
+                    "load_hours": "Horas de uso al día",
+                    "load_enabled": "Activar carga"
+                }
             }
         }
     }
