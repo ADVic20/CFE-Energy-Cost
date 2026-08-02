@@ -27,13 +27,13 @@
             },
 
             "loads": {
-                "title": "Cargas de consumo",
+                "title": "Agregar carga",
                 "description": "Agrega equipos para estimar su consumo eléctrico",
                 "data": {
                     "load_name": "Nombre del equipo",
+                    "load_entity": "Entidad a monitorear",
                     "load_power": "Potencia del equipo (W)",
-                    "load_hours": "Horas de uso al día",
-                    "load_enabled": "Activar carga"
+                    "load_type": "Tipo de equipo"
                 }
             }
         }
