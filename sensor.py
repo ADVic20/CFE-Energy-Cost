@@ -1,16 +1,20 @@
 from __future__ import annotations
 
+
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorDeviceClass,
     SensorStateClass,
 )
 
+
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
 )
 
+
 from .const import DOMAIN
+
 
 
 SENSORS = [
@@ -25,28 +29,10 @@ SENSORS = [
 
     ("total", "CFE Recibo Estimado", "MXN"),
 
-    ("previous_reading", "CFE Lectura Anterior", "kWh"),
-
-    ("current_reading", "CFE Lectura Actual", "kWh"),
-
-    ("days", "CFE Días del Periodo", "días"),
-
-    ("tariff", "CFE Tarifa", None),
-
-    ("region", "CFE Región", None),
-
-    ("period_start", "CFE Inicio del Periodo", None),
-
-    ("period_end", "CFE Fin del Periodo", None),
-
-    ("cut_date", "CFE Fecha de Corte", None),
-
-    ("unknown_consumption", "CFE Consumo Desconocido", "kWh"),
-
-    # NUEVO
     ("loads_kwh", "CFE Cargas Estimadas", "kWh"),
 
 ]
+
 
 
 
@@ -56,25 +42,59 @@ async def async_setup_entry(
     async_add_entities,
 ):
 
-    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+
+    coordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ][
+        "coordinator"
+    ]
 
 
-    async_add_entities(
 
-        [
+    entities = []
+
+
+    # Sensores principales
+
+    for key, name, unit in SENSORS:
+
+        entities.append(
 
             CFESensor(
                 coordinator,
                 key,
                 name,
-                unit,
+                unit
             )
 
-            for key, name, unit in SENSORS
+        )
 
-        ]
 
+
+    # Sensores individuales de cargas
+
+    for load_name in coordinator.loads.loads:
+
+
+        entities.append(
+
+            CFELoadSensor(
+
+                coordinator,
+
+                load_name
+
+            )
+
+        )
+
+
+
+    async_add_entities(
+        entities
     )
+
+
 
 
 
@@ -92,6 +112,7 @@ class CFESensor(
         unit,
     ):
 
+
         super().__init__(
             coordinator
         )
@@ -105,23 +126,22 @@ class CFESensor(
 
         self._attr_unique_id = (
 
-            f"{DOMAIN}_{coordinator.entry_id}_{key}"
+            f"{DOMAIN}_"
+            f"{coordinator.entry_id}_"
+            f"{key}"
 
         )
 
 
-        if unit:
+        self._attr_native_unit_of_measurement = unit
 
-            self._attr_native_unit_of_measurement = unit
 
 
 
     @property
-    def native_value(self):
-
-        if self.coordinator.data is None:
-
-            return None
+    def native_value(
+        self
+    ):
 
 
         return self.coordinator.data.get(
@@ -131,17 +151,14 @@ class CFESensor(
 
 
     @property
-    def device_class(self):
+    def device_class(
+        self
+    ):
+
 
         if self.key in (
 
             "consumption",
-
-            "previous_reading",
-
-            "current_reading",
-
-            "unknown_consumption",
 
             "loads_kwh",
 
@@ -157,98 +174,4 @@ class CFESensor(
 
             "iva",
 
-            "dap",
-
-            "total",
-
-        ):
-
-            return SensorDeviceClass.MONETARY
-
-
-
-        return None
-
-
-
-    @property
-    def state_class(self):
-
-
-        if self.key in (
-
-            "consumption",
-
-            "previous_reading",
-
-            "current_reading",
-
-            "unknown_consumption",
-
-            "loads_kwh",
-
-        ):
-
-            return SensorStateClass.TOTAL
-
-
-
-        if self.key in (
-
-            "energy_cost",
-
-            "iva",
-
-            "dap",
-
-            "total",
-
-        ):
-
-            return SensorStateClass.TOTAL
-
-
-
-        return None
-
-
-
-    @property
-    def extra_state_attributes(self):
-
-        if self.key != "total":
-
-            return None
-
-
-        return {
-
-            "Bloques":
-
-                self.coordinator.data.get(
-                    "blocks",
-                    []
-                ),
-
-
-            "Periodo":
-
-                self.coordinator.data.get(
-                    "period"
-                ),
-
-
-            "Tarifa":
-
-                self.coordinator.data.get(
-                    "tariff"
-                ),
-
-
-            "Región":
-
-                self.coordinator.data.get(
-                    "region"
-                ),
-
-        }
+            "dap
