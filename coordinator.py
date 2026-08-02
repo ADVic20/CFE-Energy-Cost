@@ -12,6 +12,7 @@ from homeassistant.helpers.update_coordinator import (
 from .tariff_loader import load_tariff
 from .calculator import calculate_cfe_cost
 from .period import CFEPeriodStorage
+from .loads import LoadManager
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,6 +54,11 @@ class CFEEnergyCoordinator(
             hass,
             entry_id,
         )
+
+
+        # NUEVO:
+        # Administrador de cargas virtuales
+        self.loads = LoadManager()
 
 
         self.data = {}
@@ -233,6 +239,7 @@ class CFEEnergyCoordinator(
             days = 0
 
 
+
         tariff_data = load_tariff(
                 
             self.config.get(
@@ -247,6 +254,8 @@ class CFEEnergyCoordinator(
 
         )
 
+
+
         bill = calculate_cfe_cost(
 
             energy_kwh=consumption,
@@ -259,6 +268,13 @@ class CFEEnergyCoordinator(
             ),
 
         )
+
+
+        # NUEVO:
+        # consumo estimado de cargas
+        loads_kwh = self.loads.total_monthly_kwh()
+
+
 
         self.data = {
 
@@ -317,14 +333,12 @@ class CFEEnergyCoordinator(
                 cut_date,
 
 
-
             "energy_cost":
 
                 bill.get(
                     "energy_cost",
                     0
                 ),
-
 
 
             "iva":
@@ -335,14 +349,12 @@ class CFEEnergyCoordinator(
                 ),
 
 
-
             "dap":
 
                 bill.get(
                     "dap",
                     0
                 ),
-
 
 
             "total":
@@ -353,7 +365,6 @@ class CFEEnergyCoordinator(
                 ),
 
 
-
             "blocks":
 
                 bill.get(
@@ -361,6 +372,11 @@ class CFEEnergyCoordinator(
                     []
                 ),
 
+
+            # NUEVO
+            "loads_kwh":
+
+                loads_kwh,
 
 
             "period":
