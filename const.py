@@ -235,3 +235,12 @@ SENSOR_LOADS_CONSUMPTION = "loads_kwh"
 CONF_LOAD_VOLTAGE = "load_voltage"
 CONF_LOAD_CURRENT = "load_current"
 CONF_LOAD_TYPE = "load_type"
+
+
+CONF_LOAD_NAME = "load_name"
+
+CONF_LOAD_ENTITY = "load_entity"
+
+CONF_LOAD_POWER = "load_power"
+
+CONF_LOAD_TYPE = "load_type"
