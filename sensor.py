@@ -43,6 +43,9 @@ SENSORS = [
 
     ("unknown_consumption", "CFE Consumo Desconocido", "kWh"),
 
+    # NUEVO
+    ("loads_kwh", "CFE Cargas Estimadas", "kWh"),
+
 ]
 
 
@@ -88,7 +91,6 @@ class CFESensor(
         name,
         unit,
     ):
-
 
         super().__init__(
             coordinator
@@ -141,6 +143,8 @@ class CFESensor(
 
             "unknown_consumption",
 
+            "loads_kwh",
+
         ):
 
             return SensorDeviceClass.ENERGY
@@ -180,6 +184,8 @@ class CFESensor(
             "current_reading",
 
             "unknown_consumption",
+
+            "loads_kwh",
 
         ):
 
