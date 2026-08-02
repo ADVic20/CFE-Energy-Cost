@@ -198,7 +198,19 @@ REGIONS = [
 ]
 
 
+#
+# Cargas estimadas
+#
 
+CONF_LOADS = "loads"
+
+CONF_LOAD_NAME = "load_name"
+
+CONF_LOAD_POWER = "load_power"
+
+CONF_LOAD_HOURS = "load_hours"
+
+CONF_LOAD_ENABLED = "load_enabled"
 
 
 #
@@ -216,3 +228,10 @@ SENSOR_DAP = "dap"
 SENSOR_TOTAL = "total"
 
 SENSOR_UNKNOWN_CONSUMPTION = "unknown_consumption"
+
+SENSOR_LOADS_CONSUMPTION = "loads_kwh"
+
+
+CONF_LOAD_VOLTAGE = "load_voltage"
+CONF_LOAD_CURRENT = "load_current"
+CONF_LOAD_TYPE = "load_type"
