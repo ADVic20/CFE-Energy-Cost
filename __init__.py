@@ -51,7 +51,7 @@ async def async_setup_entry(
         hass,
 
         entry.data,
-
+        entry.options,
         entry.entry_id
 
     )
