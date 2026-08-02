@@ -174,4 +174,136 @@ class CFESensor(
 
             "iva",
 
-            "dap
+            "dap",
+
+            "total",
+
+        ):
+
+            return SensorDeviceClass.MONETARY
+
+
+
+        return None
+
+
+
+
+    @property
+    def state_class(
+        self
+    ):
+
+
+        if self.key in (
+
+            "consumption",
+
+            "loads_kwh",
+
+        ):
+
+            return SensorStateClass.TOTAL
+
+
+
+        if self.key in (
+
+            "energy_cost",
+
+            "iva",
+
+            "dap",
+
+            "total",
+
+        ):
+
+            return SensorStateClass.TOTAL
+
+
+
+        return None
+
+
+
+
+
+
+class CFELoadSensor(
+    CoordinatorEntity,
+    SensorEntity,
+):
+
+
+    def __init__(
+        self,
+        coordinator,
+        load_name,
+    ):
+
+
+        super().__init__(
+            coordinator
+        )
+
+
+        self.load_name = load_name
+
+
+
+        self._attr_name = (
+
+            f"CFE {load_name}"
+
+        )
+
+
+        self._attr_unique_id = (
+
+            f"{DOMAIN}_"
+            f"{coordinator.entry_id}_"
+            f"load_"
+            f"{load_name}"
+
+        )
+
+
+        self._attr_native_unit_of_measurement = "kWh"
+
+
+
+    @property
+    def native_value(
+        self
+    ):
+
+
+        loads = self.coordinator.data.get(
+            "loads",
+            {}
+        )
+
+
+        return loads.get(
+            self.load_name,
+            0
+        )
+
+
+
+    @property
+    def device_class(
+        self
+    ):
+
+        return SensorDeviceClass.ENERGY
+
+
+
+    @property
+    def state_class(
+        self
+    ):
+
+        return SensorStateClass.TOTAL
